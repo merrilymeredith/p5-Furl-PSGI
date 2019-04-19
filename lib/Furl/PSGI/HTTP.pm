@@ -5,8 +5,9 @@ package Furl::PSGI::HTTP;
 use warnings;
 use strict;
 
+use Carp ();
 use HTTP::Parser::XS;
-use HTTP::Message::PSGI;
+use HTTP::Message::PSGI ();
 
 use parent 'Furl::HTTP';
 
