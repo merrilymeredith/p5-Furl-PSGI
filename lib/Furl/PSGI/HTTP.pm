@@ -47,7 +47,9 @@ sub read_timeout {
   if (my $request = delete $self->{request}) {
     my $env = {};
     my $ret = HTTP::Parser::XS::parse_http_request($request, $env);
-    ## TODO handle $ret
+    if ($ret && $ret < 0) {
+      Carp::confess "Error $ret trying to parse buffered HTTP request";
+    }
     
     my $res = eval { $self->{app}->($env) }
       || $self->_psgi500($@);
