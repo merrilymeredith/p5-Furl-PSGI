@@ -1,5 +1,7 @@
 package Furl::PSGI::HTTP;
 
+# ABSTRACT: Furl's low-level interface, wired to PSGI
+
 use warnings;
 use strict;
 
@@ -7,6 +9,14 @@ use HTTP::Parser::XS;
 use HTTP::Message::PSGI;
 
 use parent 'Furl::HTTP';
+
+=method new
+
+Supports all options in L<Furl::HTTP/new>, and additionally requires an C<app>
+attribute which should be a L<PSGI> app (a code ref), which will receive ALL
+requests handled by the C<Furl::PSGI::HTTP> instance returned.
+
+=cut
 
 sub new {
   my $class = shift;
@@ -66,3 +76,45 @@ sub _psgi500 {
 }
 
 1;
+
+__END__
+=head1 SYNOPSIS
+
+  use Furl::PSGI::HTTP;
+
+  my $res = Furl::PSGI::HTTP->new(app => $my_app)->request(
+    method => 'POST',
+    url    => 'https://foo.baz.net/etc',
+    headers => [
+      'Content-Type' => 'application/json',
+    ],
+    content => encode_json {
+      type => 'dog',
+      breed => 'chihuahua',
+    },
+  );
+
+=head1 DESCRIPTION
+
+This is where the magic happens for L<Furl::PSGI>, similar to L<Furl> and
+L<Furl::HTTP>.  Given a PSGI app, all requests are sent to it and no network
+connections should be made.
+
+=head1 INHERITANCE
+
+Furl::PSGI::HTTP
+  is a L<Furl::HTTP>
+
+=head1 NOTES
+
+L<Furl::HTTP> does a ton of work inside L<Furl::HTTP/request>.  In order to
+capture all of the behavior of Furl, and to avoid having to keep up with any
+changes, I didn't want to reimplement C<request>.  Instead, we turn all of the
+C<connect> methods into stubs, and change C<write_all> to build an internal
+buffer of the request as a string, as well as change C<read_timeout> into
+a method that takes the buffered request, parses it, invokes the PSGI app, then
+turns the PSGI response into a string to pretend we're getting an HTTP reply
+back on a socket.  This has its own stability risks as Furl changes, but it's
+much, much simpler than taking on all work that happens in C<request>.
+
+=cut
