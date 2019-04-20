@@ -36,7 +36,8 @@ sub connect { 1 }
 sub write_all {
   my ($self, $sock, $p, $timeout_at) = @_;
   
-  ($self->{request} //= '') .= $p;
+  $self->{request} = '' if !exists $self->{request};
+  $self->{request} .= $p;
 
   1;
 }
