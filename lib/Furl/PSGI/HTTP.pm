@@ -21,7 +21,7 @@ requests handled by the C<Furl::PSGI::HTTP> instance returned.
 
 sub new {
   my $class = shift;
-  my $self  = $class->next::method(@_);
+  my $self  = $class->SUPER::new(@_);
 
   defined $self->{app}
     or Carp::croak "'app' attribute must be provided";
